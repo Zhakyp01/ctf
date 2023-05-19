@@ -1,0 +1,96 @@
+pipeline{
+
+    parameters {
+  string defaultValue: 'kylychbek', description: 'write your name', name: 'name'
+}
+    agent any
+    stages{
+        stage('aws credentials with init') { 
+            steps {
+                    sh 'terraform init'
+            }
+        }
+                stage('aws plan') { 
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'terraform-pipe',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    sh 'terraform plan'
+                }
+                }
+
+            }
+                    stage('terraform apply') { 
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'terraform-pipe',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    sh 'terraform apply --auto-approve'
+                }
+
+            }
+        }
+             stage('kubernetes create') { 
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'terraform-pipe',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    sh 'aws eks update-kubeconfig --region us-east-1 --name prod-eks'
+                    sh 'kubectl create -f deployment.yaml'
+                }
+
+            }
+        }
+
+                     stage('kubernetes apply') { 
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'terraform-pipe',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    sh 'aws eks update-kubeconfig --region us-east-1 --name prod-eks'
+                    sh 'kubectl apply -f deployment.yaml'
+                }
+
+            }
+        }
+             stage('terraform destroy') { 
+            steps {
+                             script {
+          env.USERNAME = input message: 'Please enter the username',
+                             parameters: [string(defaultValue: 'delete',
+                                          description: '',
+                                          name: 'Username')]
+          env.PASSWORD = input message: 'Please enter the password',
+                             parameters: [password(defaultValue: '123',
+                                          description: '',
+                                          name: 'Password')]
+        }
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'terraform-pipe',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    sh 'terraform destroy --auto-approve'
+                }
+
+            }
+        }
+
+
+
+
+
+
+
+
+
+        }
+    }
