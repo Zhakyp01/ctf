@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                git branch: 'gke', credentialsId: 'jenkins', url: 'https://github.com/lllunara/jenkins.git'
+                git branch: 'master', credentialsId: 'jenkins', url: 'https://github.com/lllunara/jenkins.git'
             }
         }
         stage('Deploy to kubernetes'){
