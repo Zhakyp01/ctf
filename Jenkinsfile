@@ -1,11 +1,11 @@
 pipeline {
     agent any
     environment {
-        GCLOUD_CREDS = credentials('credential')
-        PROJECT_ID = 	'student-project-379814'
-        CLUSTER_NAME = 'cluster-1'
-        LOCATION = 'us-central1-c'
-        CREDENTIALS_ID = 'student-project-379814'
+//         GCLOUD_CREDS = credentials('credential')
+//         PROJECT_ID = 	'student-project-379814'
+        CLUSTER_NAME = 'dev-eks'
+        LOCATION = 'us-east-1'
+        CREDENTIALS_ID = 'awsnargiza'
     }
     stages {
         stage('Git Checkout') {
@@ -16,7 +16,7 @@ pipeline {
         stage('Deploy to kubernetes'){
           steps{
              
-             step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: 'dep.yaml', credentialsId: env.CREDENTIALS_ID, verifyDeployments: true])
+             step([$class: 'KubernetesEngineBuilder',  clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: 'dep.yaml', credentialsId: env.CREDENTIALS_ID, verifyDeployments: true])
 		   echo "Deployment Finished ..."
           }
         }
